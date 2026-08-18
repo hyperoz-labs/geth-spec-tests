@@ -14,7 +14,7 @@ Generates tracer specification files for validating Besu's tracer implementation
 **Components**:
 - Pre-built Geth test node with 33 blocks covering various EVM scenarios
 - Python scripts to query debug APIs and generate spec files
-- 168 generated spec files ready for Besu integration
+- 202 generated spec files ready for Besu integration (includes callTracer's `onlyTopCall: true` variant, generated the same way as prestateTracer's diffMode true/false variants)
 
 **Technology**: Python 3.11+, Docker
 
@@ -132,6 +132,7 @@ geth_spec_tests/
 ├── debug-test-specs/              # Test data and specifications
 │   ├── specs/                     # Tracer specification files
 │   │   ├── call-tracer/           # 34 callTracer specs
+│   │   │   └── only-top-call/     # 34 callTracer specs with tracerConfig:{onlyTopCall:true}
 │   │   ├── flatcall-tracer/       # 34 flatCallTracer specs
 │   │   ├── prestate-tracer/       # 66 prestateTracer specs (diff-mode true/false)
 │   │   ├── 4byte-tracer/          # 34 4byteTracer specs
@@ -163,10 +164,14 @@ geth_spec_tests/
 
 The `debug-test-specs/specs/` directory contains reference specifications for multiple tracers:
 
-### callTracer (34 files)
+### callTracer (34 files, + 34 in `only-top-call/`)
 Traces call execution including call types, addresses, gas usage, and data in a hierarchical structure.
 
 **Example**: `specs/call-tracer/2-debug-call-tracer-0x2-simple-transfer.json`
+
+`only-top-call/` mirrors every scenario with `tracerConfig: {"onlyTopCall": true}`, which asks the tracer to omit the nested `calls` array entirely (root call fields are unchanged).
+
+**Example**: `specs/call-tracer/only-top-call/9-debug-call-tracer-0x9-call-multi-level-deep.json`
 
 ### flatCallTracer (34 files)
 Provides a flat list of all calls (unlike the nested structure of callTracer), compatible with Parity/OpenEthereum trace format.
@@ -367,6 +372,8 @@ docker compose up --build spec-generator
 
 This will query all 34 blocks and create spec files in `debug-test-specs/specs/{tracer}-tracer/`.
 
+`TRACER=callTracer` additionally generates a `debug-test-specs/specs/call-tracer/only-top-call/` variant with `tracerConfig: {"onlyTopCall": true}` for every block, the same way `TRACER=prestateTracer` generates both `diff-mode-false/` and `diff-mode-true/`.
+
 ### Manual Generation (without Docker)
 
 ```bash
@@ -390,6 +397,10 @@ TRACER=callTracer python3 generate-tracer-specs.py
 
 deactivate
 ```
+
+### Troubleshooting: Geth CLI flags changing under `latest`
+
+Both `debug-test-specs/docker-compose.yml` (the test node) and Kurtosis-based external harnesses pin `ethereum/client-go:latest`, so a fresh pull can drop or rename flags between runs. If `./start.sh` fails to become healthy, check `docker compose logs geth` for `flag provided but not defined: ...` and remove/replace the offending flag in `docker-compose.yml`. `--allow-insecure-unlock` was one such flag removed by a recent Geth release; it was unnecessary here anyway since `--dev` mode auto-unlocks the dev account.
 
 ## Test Blockchain Coverage
 

@@ -10,7 +10,7 @@ This directory contains the original chain data, tracer specifications, and test
   - `blocks.json` - Transaction definitions (editable)
 
 - **specs/** - Tracer specification files (JSON request/response pairs)
-  - `call-tracer/` - 34 callTracer specs (hierarchical call traces)
+  - `call-tracer/` - 34 callTracer specs (hierarchical call traces), plus `call-tracer/only-top-call/` - 34 specs with `tracerConfig: {"onlyTopCall": true}` (nested `calls` pruned)
   - `flatcall-tracer/` - 34 flatCallTracer specs (flat call traces)
   - `prestate-tracer/` - 66 prestateTracer specs (diff-mode true/false)
   - `4byte-tracer/` - 34 4byteTracer specs
@@ -59,6 +59,8 @@ TRACER=prestateTracer docker compose up --build spec-generator
 docker compose up --build spec-generator
 ```
 
+`TRACER=callTracer` generates both `specs/call-tracer/` (`onlyTopCall` defaults to false) and `specs/call-tracer/only-top-call/` (`tracerConfig: {"onlyTopCall": true}`), the same way `TRACER=prestateTracer` generates its `diff-mode-false/`/`diff-mode-true/` pair.
+
 **Manual generation (without Docker):**
 ```bash
 # Make sure Geth is running first
@@ -100,4 +102,9 @@ All specs follow this structure:
   },
   "statusCode": 200
 }
+```
+
+Tracers that accept configuration (e.g. callTracer's `onlyTopCall`, prestateTracer's `diffMode`) nest it under `tracerConfig` in the request params:
+```json
+{"tracer": "callTracer", "tracerConfig": {"onlyTopCall": true}}
 ```

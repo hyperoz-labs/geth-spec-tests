@@ -48,7 +48,6 @@ services:
       --ws.port 8546
       --ws.api eth,net,web3,debug
       --ws.origins "*"
-      --allow-insecure-unlock
       --nodiscover
       --maxpeers 0
       --verbosity 3
