@@ -169,12 +169,17 @@ def main():
     print(f"Tracer: {TRACER}")
 
     # Check if this tracer needs special config handling
-    needs_config = TRACER == "prestateTracer"
+    needs_diff_mode = TRACER == "prestateTracer"
+    needs_only_top_call = TRACER == "callTracer"
 
-    if needs_config:
+    if needs_diff_mode:
         print(f"Output directories:")
         print(f"  - specs/{tracer_dir_name}/diff-mode-false/")
         print(f"  - specs/{tracer_dir_name}/diff-mode-true/")
+    elif needs_only_top_call:
+        print(f"Output directories:")
+        print(f"  - specs/{tracer_dir_name}/")
+        print(f"  - specs/{tracer_dir_name}/only-top-call/")
     else:
         print(f"Output directory: specs/{tracer_dir_name}/")
     print()
@@ -197,7 +202,7 @@ def main():
     total_results = 0
     total_files = 0
 
-    if needs_config and TRACER == "prestateTracer":
+    if needs_diff_mode:
         # Generate both diffMode variants for prestateTracer
         print("Generating diffMode: false specs...")
         print("-" * 60)
@@ -221,6 +226,27 @@ def main():
             )
             total_results += result_count
             total_files += 1
+    elif needs_only_top_call:
+        # Standard (onlyTopCall defaults to false) generation, plus an explicit
+        # onlyTopCall: true variant so the nested-call-pruning behaviour has spec coverage.
+        print("Generating default (onlyTopCall: false) specs...")
+        print("-" * 60)
+        for index, (block_hex, description) in enumerate(BLOCKS):
+            result_count = generate_spec(block_hex, description, index)
+            total_results += result_count
+            total_files += 1
+
+        print()
+        print("Generating onlyTopCall: true specs...")
+        print("-" * 60)
+        for index, (block_hex, description) in enumerate(BLOCKS):
+            result_count = generate_spec(
+                block_hex, description, index,
+                tracer_config={"onlyTopCall": True},
+                subdirectory="only-top-call"
+            )
+            total_results += result_count
+            total_files += 1
     else:
         # Standard generation without config
         for index, (block_hex, description) in enumerate(BLOCKS):
@@ -237,14 +263,19 @@ def main():
     print(f"Generated: {total_files} spec files")
     print(f"Total results: {total_results}")
     print()
-    if needs_config:
+    if needs_diff_mode:
         print(f"Files created in:")
         print(f"  - specs/{tracer_dir_name}/diff-mode-false/")
         print(f"  - specs/{tracer_dir_name}/diff-mode-true/")
+    elif needs_only_top_call:
+        print(f"Files created in:")
+        print(f"  - specs/{tracer_dir_name}/")
+        print(f"  - specs/{tracer_dir_name}/only-top-call/")
     else:
         print(f"Files created in: specs/{tracer_dir_name}/")
 
     return 0
+
 
 if __name__ == "__main__":
     exit(main())
