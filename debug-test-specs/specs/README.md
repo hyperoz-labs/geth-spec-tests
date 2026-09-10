@@ -70,6 +70,7 @@ geth import --datadir ./data blocks.bin
 Each tracer has its own directory under `specs/`:
 
 - **`call-tracer/`** - Call tracer specs
+- **`flatcall-tracer/`** - Flat call tracer specs
 - **`prestate-tracer/`** - Pre-state tracer specs
   - `diff-mode-false/` - Pre-state only
   - `diff-mode-true/` - Pre and post state

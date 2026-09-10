@@ -131,11 +131,11 @@ geth_spec_tests/
 │
 ├── debug-test-specs/              # Test data and specifications
 │   ├── specs/                     # Tracer specification files
-│   │   ├── call-tracer/           # 34 callTracer specs
-│   │   │   └── only-top-call/     # 34 callTracer specs with tracerConfig:{onlyTopCall:true}
-│   │   ├── flatcall-tracer/       # 34 flatCallTracer specs
-│   │   ├── prestate-tracer/       # 66 prestateTracer specs (diff-mode true/false)
-│   │   ├── 4byte-tracer/          # 34 4byteTracer specs
+│   │   ├── call-tracer/           # callTracer specs
+│   │   │   └── only-top-call/     # callTracer specs with tracerConfig:{onlyTopCall:true}
+│   │   ├── flatcall-tracer/       # flatCallTracer specs
+│   │   ├── prestate-tracer/       # prestateTracer specs (diff-mode true/false)
+│   │   ├── 4byte-tracer/          # 4byteTracer specs
 │   │   └── README.md              # Specs documentation
 │   ├── docker-compose.yml         # Test node and spec generator
 │   ├── Dockerfile.spec-generator  # Spec generator image
@@ -164,7 +164,7 @@ geth_spec_tests/
 
 The `debug-test-specs/specs/` directory contains reference specifications for multiple tracers:
 
-### callTracer (34 files, + 34 in `only-top-call/`)
+### callTracer
 Traces call execution including call types, addresses, gas usage, and data in a hierarchical structure.
 
 **Example**: `specs/call-tracer/2-debug-call-tracer-0x2-simple-transfer.json`
@@ -173,7 +173,7 @@ Traces call execution including call types, addresses, gas usage, and data in a 
 
 **Example**: `specs/call-tracer/only-top-call/9-debug-call-tracer-0x9-call-multi-level-deep.json`
 
-### flatCallTracer (34 files)
+### flatCallTracer
 Provides a flat list of all calls (unlike the nested structure of callTracer), compatible with Parity/OpenEthereum trace format.
 
 **Example**: `specs/flatcall-tracer/2-debug-flatcall-tracer-0x2-simple-transfer.json`
