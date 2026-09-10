@@ -52,7 +52,7 @@ tracer_dir_name = TRACER.replace("Tracer", "").lower() + "-tracer"
 
 # Block definitions (block number and description)
 BLOCKS = [
-    ("0x0", "genesis"),
+    ("0x0", "block-zero"),
     ("0x1", "empty"),
     ("0x2", "simple-transfer"),
     ("0x3", "self-destruct-contract"),
@@ -87,6 +87,7 @@ BLOCKS = [
     ("0x20", "contract-creation-fails-level-1"),
     ("0x21", "stack-underflow"),
     ("0x22", "failed-create-operations"),
+    ("0x23", "create2-three-stack-items"),
 ]
 
 def rpc_call(method, params):

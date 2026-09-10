@@ -6,14 +6,14 @@ This directory contains the original chain data, tracer specifications, and test
 
 - **../chain-data/** - Blockchain data (shared at top level)
   - `genesis.json` - Genesis configuration (Chain ID 1982)
-  - `blocks.bin` - 33 pre-built blocks with transactions (original)
+  - `blocks.bin` - Pre-built blocks through 0x23
   - `blocks.json` - Transaction definitions (editable)
 
 - **specs/** - Tracer specification files (JSON request/response pairs)
-  - `call-tracer/` - 34 callTracer specs (hierarchical call traces), plus `call-tracer/only-top-call/` - 34 specs with `tracerConfig: {"onlyTopCall": true}` (nested `calls` pruned)
-  - `flatcall-tracer/` - 34 flatCallTracer specs (flat call traces)
-  - `prestate-tracer/` - 66 prestateTracer specs (diff-mode true/false)
-  - `4byte-tracer/` - 34 4byteTracer specs
+  - `call-tracer/` - callTracer specs, plus `call-tracer/only-top-call/` variants with nested `calls` pruned
+  - `flatcall-tracer/` - flatCallTracer specs
+  - `prestate-tracer/` - prestateTracer specs in diff-mode true/false variants
+  - `4byte-tracer/` - 4byteTracer specs
 
 - **Docker files:**
   - `docker-compose.yml` - Test node (port 8545) and spec generator

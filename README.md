@@ -370,7 +370,7 @@ TRACER=prestateTracer docker compose up --build spec-generator
 docker compose up --build spec-generator
 ```
 
-This will query all 34 blocks and create spec files in `debug-test-specs/specs/{tracer}-tracer/`.
+This queries every block listed by `generate-tracer-specs.py` and creates spec files in `debug-test-specs/specs/{tracer}-tracer/`.
 
 `TRACER=callTracer` additionally generates a `debug-test-specs/specs/call-tracer/only-top-call/` variant with `tracerConfig: {"onlyTopCall": true}` for every block, the same way `TRACER=prestateTracer` generates both `diff-mode-false/` and `diff-mode-true/`.
 
@@ -404,7 +404,7 @@ Both `debug-test-specs/docker-compose.yml` (the test node) and Kurtosis-based ex
 
 ## Test Blockchain Coverage
 
-The 33 blocks (0x1 to 0x21) cover:
+The blocks through 0x23 cover:
 
 - **Simple transfers** - ETH value transfers
 - **Contract deployments** - CREATE and CREATE2
