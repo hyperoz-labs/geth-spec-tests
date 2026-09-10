@@ -7,6 +7,10 @@ For prestateTracer, automatically generates both diffMode variants:
 - specs/prestate-tracer/diff-mode-false/
 - specs/prestate-tracer/diff-mode-true/
 
+For flatCallTracer, automatically generates default, convertParityErrors, and includePrecompiles variants:
+- specs/flatcall-tracer/
+- specs/flatcall-tracer/convert-parity-errors/
+- specs/flatcall-tracer/include-precompiles/
 Usage:
   python3 generate-tracer-specs.py [tracer-name]
   TRACER=flatTracer python3 generate-tracer-specs.py
@@ -172,6 +176,7 @@ def main():
     # Check if this tracer needs special config handling
     needs_diff_mode = TRACER == "prestateTracer"
     needs_only_top_call = TRACER == "callTracer"
+    needs_flat_variants = TRACER == "flatCallTracer"
 
     if needs_diff_mode:
         print(f"Output directories:")
@@ -181,6 +186,11 @@ def main():
         print(f"Output directories:")
         print(f"  - specs/{tracer_dir_name}/")
         print(f"  - specs/{tracer_dir_name}/only-top-call/")
+    elif needs_flat_variants:
+        print(f"Output directories:")
+        print(f"  - specs/{tracer_dir_name}/")
+        print(f"  - specs/{tracer_dir_name}/convert-parity-errors/")
+        print(f"  - specs/{tracer_dir_name}/include-precompiles/")
     else:
         print(f"Output directory: specs/{tracer_dir_name}/")
     print()
@@ -248,6 +258,39 @@ def main():
             )
             total_results += result_count
             total_files += 1
+    elif needs_flat_variants:
+        # Standard (convertParityErrors: false, includePrecompiles: false) generation,
+        # plus convertParityErrors and includePrecompiles variants.
+        print("Generating default (convertParityErrors: false, includePrecompiles: false) specs...")
+        print("-" * 60)
+        for index, (block_hex, description) in enumerate(BLOCKS):
+            result_count = generate_spec(block_hex, description, index)
+            total_results += result_count
+            total_files += 1
+
+        print()
+        print("Generating convertParityErrors: true specs...")
+        print("-" * 60)
+        for index, (block_hex, description) in enumerate(BLOCKS):
+            result_count = generate_spec(
+                block_hex, description, index,
+                tracer_config={"convertParityErrors": True},
+                subdirectory="convert-parity-errors"
+            )
+            total_results += result_count
+            total_files += 1
+
+        print()
+        print("Generating includePrecompiles: true specs...")
+        print("-" * 60)
+        for index, (block_hex, description) in enumerate(BLOCKS):
+            result_count = generate_spec(
+                block_hex, description, index,
+                tracer_config={"includePrecompiles": True},
+                subdirectory="include-precompiles"
+            )
+            total_results += result_count
+            total_files += 1
     else:
         # Standard generation without config
         for index, (block_hex, description) in enumerate(BLOCKS):
@@ -272,6 +315,11 @@ def main():
         print(f"Files created in:")
         print(f"  - specs/{tracer_dir_name}/")
         print(f"  - specs/{tracer_dir_name}/only-top-call/")
+    elif needs_flat_variants:
+        print(f"Files created in:")
+        print(f"  - specs/{tracer_dir_name}/")
+        print(f"  - specs/{tracer_dir_name}/convert-parity-errors/")
+        print(f"  - specs/{tracer_dir_name}/include-precompiles/")
     else:
         print(f"Files created in: specs/{tracer_dir_name}/")
 

@@ -59,7 +59,7 @@ TRACER=prestateTracer docker compose up --build spec-generator
 docker compose up --build spec-generator
 ```
 
-`TRACER=callTracer` generates both `specs/call-tracer/` (`onlyTopCall` defaults to false) and `specs/call-tracer/only-top-call/` (`tracerConfig: {"onlyTopCall": true}`), the same way `TRACER=prestateTracer` generates its `diff-mode-false/`/`diff-mode-true/` pair.
+`TRACER=flatCallTracer` generates `specs/flatcall-tracer/` (default config), `specs/flatcall-tracer/convert-parity-errors/` (`tracerConfig: {"convertParityErrors": true}`), and `specs/flatcall-tracer/include-precompiles/` (`tracerConfig: {"includePrecompiles": true}`). `TRACER=callTracer` generates both `specs/call-tracer/` (`onlyTopCall` defaults to false) and `specs/call-tracer/only-top-call/` (`tracerConfig: {"onlyTopCall": true}`), the same way `TRACER=prestateTracer` generates its `diff-mode-false/`/`diff-mode-true/` pair.
 
 **Manual generation (without Docker):**
 ```bash
