@@ -182,6 +182,9 @@ def main():
         print(f"Output directories:")
         print(f"  - specs/{tracer_dir_name}/diff-mode-false/")
         print(f"  - specs/{tracer_dir_name}/diff-mode-true/")
+        print(f"  - specs/{tracer_dir_name}/disable-code/")
+        print(f"  - specs/{tracer_dir_name}/disable-storage/")
+        print(f"  - specs/{tracer_dir_name}/include-empty/")
     elif needs_only_top_call:
         print(f"Output directories:")
         print(f"  - specs/{tracer_dir_name}/")
@@ -234,6 +237,42 @@ def main():
                 block_hex, description, index,
                 tracer_config={"diffMode": True},
                 subdirectory="diff-mode-true"
+            )
+            total_results += result_count
+            total_files += 1
+
+        print()
+        print("Generating disableCode: true specs...")
+        print("-" * 60)
+        for index, (block_hex, description) in enumerate(BLOCKS):
+            result_count = generate_spec(
+                block_hex, description, index,
+                tracer_config={"diffMode": False, "disableCode": True},
+                subdirectory="disable-code"
+            )
+            total_results += result_count
+            total_files += 1
+
+        print()
+        print("Generating disableStorage: true specs...")
+        print("-" * 60)
+        for index, (block_hex, description) in enumerate(BLOCKS):
+            result_count = generate_spec(
+                block_hex, description, index,
+                tracer_config={"diffMode": False, "disableStorage": True},
+                subdirectory="disable-storage"
+            )
+            total_results += result_count
+            total_files += 1
+
+        print()
+        print("Generating includeEmpty: true specs...")
+        print("-" * 60)
+        for index, (block_hex, description) in enumerate(BLOCKS):
+            result_count = generate_spec(
+                block_hex, description, index,
+                tracer_config={"diffMode": False, "includeEmpty": True},
+                subdirectory="include-empty"
             )
             total_results += result_count
             total_files += 1
