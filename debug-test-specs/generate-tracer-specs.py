@@ -92,6 +92,10 @@ BLOCKS = [
     ("0x21", "stack-underflow"),
     ("0x22", "failed-create-operations"),
     ("0x23", "create2-three-stack-items"),
+    ("0x24", "extcode-and-balance-opcodes"),
+    ("0x25", "eip7702-set-code-authorization"),
+    ("0x26", "eip7702-call-delegated-eoa-directly"),
+    ("0x27", "eip7702-call-delegated-eoa-via-proxy"),
 ]
 
 def rpc_call(method, params):

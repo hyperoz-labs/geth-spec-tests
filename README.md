@@ -24,11 +24,16 @@ Generates custom blockchain data by replaying transactions from `blocks.json`.
 **Purpose**: Create new blockchain test data when you need to add or modify test transactions. The generated blockchain can be exported and used by the spec generator above.
 
 **Components**:
-- Node.js + Web3.js transaction executor
-- Synchronized block generation with 100% exact matching
-- Handles reverting transactions (stack underflows, invalid opcodes)
+- `generate-blocks.py`: Python transaction executor, reusing `debug-test-specs`'s own writable
+  `--dev` node (no separate Docker infra) via plain JSON-RPC (`eth_sendRawTransaction`)
+- Supports legacy transactions and EIP-7702 `SetCodeTransaction`s (`type: 4`,
+  `authorizationList`); each authorization carries its own `authoritySecretKey` so the
+  signature is fully reproducible from `blocks.json` alone
+- One block per invocation, waiting for each transaction to mine before moving to the next
+  block; `--from-block N` replays only a suffix (useful for verifying newly appended blocks
+  against a chain that already has the earlier blocks imported)
 
-**Technology**: Node.js 20+, Geth v1.14.12, Docker
+**Technology**: Python 3.11+ (`eth-account`, `requests`), reuses `debug-test-specs`'s Geth node
 
 ---
 
@@ -43,8 +48,8 @@ Generates custom blockchain data by replaying transactions from `blocks.json`.
 - Docker Compose
 
 **Optional (for local development):**
-- Python 3.11+ (for `debug-test-specs/` - tracer spec generation)
-- Node.js 20+ (for `blockchain-generation/` - blockchain generation)
+- Python 3.11+ (for `debug-test-specs/` tracer spec generation and `blockchain-generation/`
+  block replay; both share the `debug-test-specs/venv` virtualenv)
 
 ## Quick Start
 
@@ -84,41 +89,30 @@ cd debug-test-specs && ./test-debug-rpc.sh
 
 ### Project 2: Blockchain Generation (blockchain-generation/)
 
-#### 1. Generate Blockchain
-
-Generate blockchain from transactions defined in `blocks.json`:
-
-```bash
-cd blockchain-generation
-docker compose -f docker-compose.generate-node.yml up
-```
-
-This will:
-- Initialize Geth with `genesis.json` (Chain ID 1982)
-- Execute all 53 transactions across 33 blocks
-- Store result in `geth-data/` directory
-- Stop automatically after completion (~3 minutes)
-
-#### 2. Verify Generated Blockchain
+Requires a running node from Project 1 (`debug-test-specs/start.sh`) with the desired starting
+chain state already imported/mined.
 
 ```bash
-cd blockchain-generation
-docker compose -f docker-compose.query.yml up -d
-
-curl -X POST http://localhost:8548 \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'
+cd debug-test-specs && source venv/bin/activate  # eth-account/requests already installed here
+cd ../blockchain-generation
+RPC_URL=http://localhost:8545 python3 generate-blocks.py            # replay every block
+RPC_URL=http://localhost:8545 python3 generate-blocks.py --from-block 36  # replay a suffix only
 ```
 
-Expected: `{"jsonrpc":"2.0","id":1,"result":"0x21"}` (33 blocks)
+Each transaction's hash is deterministic (same sender, nonce, gas params, data, signature), so
+re-running the replay reproduces identical transaction hashes and identical execution results
+every time; only the mined block's wall-clock timestamp (and therefore block hash) differs
+between runs, since `--dev` mode timestamps each block at mining time.
 
-#### 3. Cleanup
+After replaying, export the extended chain from the live node and replace `chain-data/blocks.bin`:
 
 ```bash
-docker compose -f docker-compose.query.yml down
-docker compose -f docker-compose.generate-node.yml down
-rm -rf geth-data
+curl -s http://localhost:8545 -X POST -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"admin_exportChain","params":["/chain-data/blocks-new.bin"],"id":1}'
 ```
+
+(`admin_exportChain` writes inside the container's `/chain-data` mount, already bound to the
+host `chain-data/` directory by `debug-test-specs/docker-compose.yml`.)
 
 ## Project Structure
 
@@ -146,13 +140,8 @@ geth_spec_tests/
 │   └── README.md                  # Documentation
 │
 ├── blockchain-generation/         # Blockchain generation tools
-│   ├── docker-compose.generate-node.yml # Generation node (port 8547)
-│   ├── docker-compose.query.yml   # Query node for verification (port 8548)
-│   ├── Dockerfile.combined-node   # Combined Geth + Node.js image
-│   ├── generate-blocks.js         # Transaction executor (Node.js)
-│   ├── package.json               # Node.js dependencies
-│   ├── geth-data/                 # Generated blockchain database (bind mount)
-│   └── README.md                  # Generation documentation
+│   └── generate-blocks.py         # Transaction executor (Python), targets a running
+│                                   # debug-test-specs node over JSON-RPC
 │
 ├── output/                        # Export output folder
 │   └── .gitignore                 # Ignore *.bin files
