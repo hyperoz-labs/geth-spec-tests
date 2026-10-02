@@ -131,12 +131,17 @@ def main():
         print(f"Block {block_num}: {len(transactions)} transaction(s)")
 
         nonce_tracker = {}
-        for i, tx_def in enumerate(transactions):
-            raw, tx_hash = sign_transaction(tx_def, nonce_tracker, chain_id)
+        # Sign everything first, then submit in reverse nonce order: higher-nonce txs sit in the
+        # pool as non-executable (gapped) until the lowest nonce arrives, which promotes them all
+        # at once so --dev (period 0) seals them together in a single block.
+        signed_txs = [sign_transaction(tx_def, nonce_tracker, chain_id) for tx_def in transactions]
+        for raw, tx_hash in reversed(signed_txs):
             sent_hash = rpc("eth_sendRawTransaction", ["0x" + raw.hex()])
             assert sent_hash.lower() == ("0x" + tx_hash).lower(), (
                 f"hash mismatch: sent {sent_hash} signed {tx_hash}"
             )
+        for i, (tx_def, (_, tx_hash)) in enumerate(zip(transactions, signed_txs)):
+            sent_hash = "0x" + tx_hash
             receipt = wait_for_receipt(sent_hash)
             mined_block = int(receipt["blockNumber"], 16)
             status = receipt["status"]

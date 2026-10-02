@@ -96,6 +96,8 @@ BLOCKS = [
     ("0x25", "eip7702-set-code-authorization"),
     ("0x26", "eip7702-call-delegated-eoa-directly"),
     ("0x27", "eip7702-call-delegated-eoa-via-proxy"),
+    ("0x28", "deploy-log-contracts"),
+    ("0x29", "logs-with-reverted-tx-and-frame"),
 ]
 
 def rpc_call(method, params):
@@ -108,6 +110,27 @@ def rpc_call(method, params):
     }
     response = requests.post(RPC_URL, json=payload)
     return response.json()
+
+def generate_tx_spec(block_hex, tx_index, description, tracer_config, subdirectory):
+    """Generate a debug_traceTransaction spec for the tx at tx_index of a block."""
+    block = rpc_call("eth_getBlockByNumber", [block_hex, False])["result"]
+    tx_hash = block["transactions"][tx_index]
+    request = {
+        "jsonrpc": "2.0",
+        "method": "debug_traceTransaction",
+        "params": [tx_hash, {"tracer": TRACER, "tracerConfig": tracer_config}],
+        "id": 1
+    }
+    print(f"Querying tx {tx_hash} (block {block_hex} #{tx_index}, {description})...")
+    response = rpc_call("debug_traceTransaction", request["params"])
+    spec = {"request": request, "response": response, "statusCode": 200}
+    index = int(block_hex, 16)
+    filename = f"{index}-debug-{tracer_dir_name}-{block_hex}-{description}.json"
+    filepath = os.path.join("specs", tracer_dir_name, subdirectory, filename)
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    with open(filepath, 'w') as f:
+        json.dump(spec, f, indent=2)
+    print(f"  ✓ Created {os.path.join(subdirectory, filename)}")
 
 def generate_spec(block_hex, description, index, tracer_config=None, subdirectory=None):
     """Generate a tracer spec file for a block
@@ -301,6 +324,40 @@ def main():
             )
             total_results += result_count
             total_files += 1
+
+        # withLog: true variants (log index is block-wide, matching eth_getBlockReceipts logIndex),
+        # with and without onlyTopCall, plus a debug_traceTransaction spec for a non-first tx.
+        print()
+        print("Generating withLog: true specs...")
+        print("-" * 60)
+        for index, (block_hex, description) in enumerate(BLOCKS):
+            result_count = generate_spec(
+                block_hex, description, index,
+                tracer_config={"withLog": True},
+                subdirectory="with-log"
+            )
+            total_results += result_count
+            total_files += 1
+
+        print()
+        print("Generating withLog: true, onlyTopCall: true specs...")
+        print("-" * 60)
+        for index, (block_hex, description) in enumerate(BLOCKS):
+            result_count = generate_spec(
+                block_hex, description, index,
+                tracer_config={"withLog": True, "onlyTopCall": True},
+                subdirectory="with-log/only-top-call"
+            )
+            total_results += result_count
+            total_files += 1
+
+        print()
+        print("Generating withLog: true debug_traceTransaction spec...")
+        print("-" * 60)
+        generate_tx_spec("0xf", 1, "logs-second-transaction", {"withLog": True}, "with-log")
+        total_files += 1
+        generate_tx_spec("0x29", 2, "logs-after-reverted-tx-third-transaction", {"withLog": True}, "with-log")
+        total_files += 1
     elif needs_flat_variants:
         # Standard (convertParityErrors: false, includePrecompiles: false) generation,
         # plus convertParityErrors and includePrecompiles variants.
